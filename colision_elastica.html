@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Colisión Elástica - Laboratorio de Fisica</title>
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+  <link rel="stylesheet" href="estilos.css" />
+</head>
+
+<body>
+  <!-- Panel de control -->
+<div id="panel">
+  <div class="panel-header">
+    <h3>Control de Simulación</h3>
+  </div>
+  <div class="panel-content">
+    <label>Masa izquierda (kg): <input type="number" id="masa1" step="0.01" value="1.0"></label>
+    <label>Velocidad izquierda (m/s): <input type="number" id="vel1" step="0.01" value="1.5"></label>
+    <label>Masa derecha (kg): <input type="number" id="masa2" step="0.01" value="1.0"></label>
+    <label>Velocidad derecha (m/s): <input type="number" id="vel2" step="0.01" value="-1.0"></label>
+    <button id="simularBtn">
+      <svg class="icon icon-play" viewBox="0 0 24 24">
+        <path d="M8 5v14l11-7z"/>
+      </svg>
+      Iniciar
+    </button>
+    <button id="reiniciarBtn">
+      <svg class="icon icon-reset" viewBox="0 0 24 24">
+        <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+      </svg>
+      Reiniciar
+    </button>
+  </div>
+
+  <!-- GRÁFICO EN TIEMPO REAL DEBAJO DEL PANEL-->
+  <div class="panel-grafico">
+    <h4>Gráfico de Colisión en Tiempo Real</h4>
+    <canvas id="graficoPanel" width="600" height="300"></canvas>
+    <div class="leyenda-grafico">
+      <div class="leyenda-item">
+        <svg class="icon icon-blue-car" viewBox="0 0 24 24">
+          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+        </svg>
+        <span>Carrito Azul</span>
+      </div>
+      <div class="leyenda-item">
+        <svg class="icon icon-red-car" viewBox="0 0 24 24">
+          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+        </svg>
+        <span>Carrito Rojo</span>
+      </div>
+    </div>
+  </div>
+</div> 
+
+  <!-- Panel de resultados -->
+  <div id="overlayResultados"></div>
+  <div id="panelResultados">
+    <div class="panel-header-resultados">
+      <h3>Resultados de la Simulación</h3>
+    </div>
+    <div class="panel-content-resultados">
+      <table>
+        <thead>
+          <tr>
+            <th>Dato</th>
+            <th>
+              <svg class="icon icon-blue-car" viewBox="0 0 24 24">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+              Azul
+            </th>
+            <th>
+              <svg class="icon icon-red-car" viewBox="0 0 24 24">
+                <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+              </svg>
+              Rojo
+            </th>
+          </tr>
+        </thead>
+        <tbody id="tablaResultadosBody">
+          <tr><td>Masa (kg)</td><td></td><td></td></tr>
+          <tr><td>Velocidad inicial (m/s)</td><td></td><td></td></tr>
+          <tr><td>Velocidad final (m/s)</td><td></td><td></td></tr>
+          <tr><td>Energía cinética inicial (J)</td><td></td><td></td></tr>
+          <tr><td>Energía cinética final (J)</td><td></td><td></td></tr>
+        </tbody>
+      </table>
+      <div class="botones-resultados">
+        <button id="cerrarResultadosBtn">
+          <svg class="icon icon-close" viewBox="0 0 24 24">
+            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+          </svg>
+          Cerrar
+        </button>
+        <button id="exportarExcelBtn">
+          <svg class="icon icon-export" viewBox="0 0 24 24">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+          </svg>
+          Exportar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <a-scene background="color: #ECECEC" shadow="type: pcfsoft">
+    <!-- Recursos -->
+    <a-assets>
+      <img id="piso" src="img/piso2.jpg" />
+      <img id="madera" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+      <img id="uni-logo" src="img/logo_emi.jpg"/>
+      <audio id="choque" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_2c86cd7507.mp3"></audio>
+      <img id="pizarra-textura" src="img/formulas.png" />
+      <img id="metal-textura" src="https://cdn.aframe.io/a-painter/images/metal.jpg">
+      <img id="goma-textura" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+      <canvas id="graficoCanvas" width="1200" height="600"></canvas>
+    </a-assets>
+
+    <!-- Piso texturizado -->
+    <a-plane rotation="-90 0 0" width="25" height="25" src="#piso" shadow="receive: true"></a-plane>
+
+    <!-- Paredes tipo salón -->
+    <a-box position="0 1.5 -12" width="25" height="7" depth="0.1" color="#cccccc"></a-box>
+    <a-box position="0 1.5 12" width="25" height="7" depth="0.1" color="#cccccc"></a-box>
+    <a-box position="-12 1.5 0" width="0.1" height="7" depth="25" color="#cccccc"></a-box>
+    <a-box position="12 1.5 0" width="0.1" height="7" depth="25" color="#cccccc"></a-box>
+
+    <!-- Logo EMI en pared frontal -->
+    <a-plane src="#uni-logo" width="7" height="4" position="0 2.5 11.9" rotation="0 180 0"></a-plane>
+
+    <!-- Cama de aire -->
+    <a-entity id="camaDeAire" position="0 0.7 -3">
+      <a-box position="0 0.75 0" width="6" height="0.12" depth="0.4"
+            material="src: #metal-textura; metalness: 0.6; roughness: 0.4" shadow></a-box>
+      <a-plane position="0 0.81 0.2" rotation="60 0 0" width="6" height="0.1"
+              material="src: #metal-textura; metalness: 0.6; roughness: 0.4; side: double"></a-plane>
+      <a-plane position="0 0.81 -0.2" rotation="-60 0 0" width="6" height="0.1"
+              material="src: #metal-textura; metalness: 0.6; roughness: 0.4; side: double"></a-plane>
+      <a-box position="0 0.63 0" width="6" height="0.1" depth="0.4"
+            color="#999999" material="metalness: 0.3; roughness: 0.6" shadow></a-box>
+      <a-box position="-2.85 0.515 0.15" width="0.1" height="0.35" depth="0.1" color="#222"></a-box>
+      <a-box position="2.85 0.515 0.15" width="0.1" height="0.35" depth="0.1" color="#222"></a-box>
+      <a-box position="-2.85 0.515 -0.15" width="0.1" height="0.35" depth="0.1" color="#222"></a-box>
+      <a-box position="2.85 0.515 -0.15" width="0.1" height="0.35" depth="0.1" color="#222"></a-box>
+    </a-entity>
+
+    <!-- AUTO AZUL (Carrito 1) -->
+    <a-entity id="carrito1" position="-2.7 1.67 -3" rotation="0 0 0" shadow>
+      <!-- Chasis principal -->
+      <a-box width="0.7" height="0.12" depth="0.25" color="#1a4d99" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Capó -->
+      <a-box position="0.35 0.03 0" width="0.15" height="0.08" depth="0.22" color="#1a4d99" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Parabrisas -->
+      <a-box position="0.28 0.12 0" width="0.08" height="0.1" depth="0.18" color="#88bbff" material="opacity: 0.7; transparent: true; metalness: 0.95; roughness: 0.05" shadow></a-box>
+      <!-- Techo -->
+      <a-box position="-0.05 0.14 0" width="0.35" height="0.12" depth="0.22" color="#1a4d99" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Ventanas laterales -->
+      <a-plane position="0 0.14 0.125" width="0.3" height="0.08" color="#88bbff" material="opacity: 0.6; transparent: true; metalness: 0.9"></a-plane>
+      <a-plane position="0 0.14 -0.125" width="0.3" height="0.08" rotation="0 180 0" color="#88bbff" material="opacity: 0.6; transparent: true; metalness: 0.9"></a-plane>
+      <!-- Maletero -->
+      <a-box position="-0.35 0.03 0" width="0.08" height="0.08" depth="0.22" color="#1a4d99" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Faros delanteros -->
+      <a-cylinder position="0.42 0.02 0.09" rotation="0 0 90" radius="0.028" height="0.04" color="#ffff99" material="emissive: #ffff66; emissiveIntensity: 0.6; metalness: 0.7"></a-cylinder>
+      <a-cylinder position="0.42 0.02 -0.09" rotation="0 0 90" radius="0.028" height="0.04" color="#ffff99" material="emissive: #ffff66; emissiveIntensity: 0.6; metalness: 0.7"></a-cylinder>
+      <!-- Luces traseras -->
+      <a-box position="-0.39 0.04 0.09" width="0.02" height="0.03" depth="0.04" color="#ff0000" material="emissive: #ff0000; emissiveIntensity: 0.4"></a-box>
+      <a-box position="-0.39 0.04 -0.09" width="0.02" height="0.03" depth="0.04" color="#ff0000" material="emissive: #ff0000; emissiveIntensity: 0.4"></a-box>
+      <!-- Ruedas mejoradas -->
+      <a-cylinder position="-0.25 -0.08 0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="0.25 -0.08 0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="0.25 -0.08 0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 -0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 -0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="0.25 -0.08 -0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="0.25 -0.08 -0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <!-- Parachoques -->
+      <a-box position="0.48 -0.02 0" width="0.06" height="0.03" depth="0.26" color="#2a2a2a" material="metalness: 0.85; roughness: 0.15"></a-box>
+      <a-box position="-0.42 -0.02 0" width="0.04" height="0.03" depth="0.26" color="#2a2a2a" material="metalness: 0.85; roughness: 0.15"></a-box>
+      <!-- Espejos retrovisores -->
+      <a-box position="0.15 0.16 0.15" width="0.04" height="0.02" depth="0.04" color="#1a4d99" material="metalness: 0.8"></a-box>
+      <a-box position="0.15 0.16 -0.15" width="0.04" height="0.02" depth="0.04" color="#1a4d99" material="metalness: 0.8"></a-box>
+      <!-- Detalles cromados -->
+      <a-box position="0.365 0.01 0" width="0.01" height="0.05" depth="0.2" color="#dddddd" material="metalness: 0.95; roughness: 0.05"></a-box>
+    </a-entity>
+
+    <!-- AUTO ROJO (Carrito 2) -->
+    <a-entity id="carrito2" position="2.7 1.67 -3" rotation="0 180 0" shadow>
+      <!-- Chasis principal -->
+      <a-box width="0.7" height="0.12" depth="0.25" color="#991a1a" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Capó -->
+      <a-box position="0.35 0.03 0" width="0.15" height="0.08" depth="0.22" color="#991a1a" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Parabrisas -->
+      <a-box position="0.28 0.12 0" width="0.08" height="0.1" depth="0.18" color="#ffbbbb" material="opacity: 0.7; transparent: true; metalness: 0.95; roughness: 0.05" shadow></a-box>
+      <!-- Techo -->
+      <a-box position="-0.05 0.14 0" width="0.35" height="0.12" depth="0.22" color="#991a1a" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Ventanas laterales -->
+      <a-plane position="0 0.14 0.125" width="0.3" height="0.08" color="#ffbbbb" material="opacity: 0.6; transparent: true; metalness: 0.9"></a-plane>
+      <a-plane position="0 0.14 -0.125" width="0.3" height="0.08" rotation="0 180 0" color="#ffbbbb" material="opacity: 0.6; transparent: true; metalness: 0.9"></a-plane>
+      <!-- Maletero -->
+      <a-box position="-0.35 0.03 0" width="0.08" height="0.08" depth="0.22" color="#991a1a" material="metalness: 0.8; roughness: 0.2" shadow></a-box>
+      <!-- Faros delanteros -->
+      <a-cylinder position="0.42 0.02 0.09" rotation="0 0 90" radius="0.028" height="0.04" color="#ffff99" material="emissive: #ffff66; emissiveIntensity: 0.6; metalness: 0.7"></a-cylinder>
+      <a-cylinder position="0.42 0.02 -0.09" rotation="0 0 90" radius="0.028" height="0.04" color="#ffff99" material="emissive: #ffff66; emissiveIntensity: 0.6; metalness: 0.7"></a-cylinder>
+      <!-- Luces traseras -->
+      <a-box position="-0.39 0.04 0.09" width="0.02" height="0.03" depth="0.04" color="#ff0000" material="emissive: #ff0000; emissiveIntensity: 0.4"></a-box>
+      <a-box position="-0.39 0.04 -0.09" width="0.02" height="0.03" depth="0.04" color="#ff0000" material="emissive: #ff0000; emissiveIntensity: 0.4"></a-box>
+      <!-- Ruedas mejoradas -->
+      <a-cylinder position="-0.25 -0.08 0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="0.25 -0.08 0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="0.25 -0.08 0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 -0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="-0.25 -0.08 -0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <a-cylinder position="0.25 -0.08 -0.13" rotation="90 0 0" radius="0.06" height="0.04" color="#0a0a0a" shadow></a-cylinder>
+      <a-cylinder position="0.25 -0.08 -0.13" rotation="90 0 0" radius="0.04" height="0.045" color="#555"></a-cylinder>
+      <!-- Parachoques -->
+      <a-box position="0.48 -0.02 0" width="0.06" height="0.03" depth="0.26" color="#2a2a2a" material="metalness: 0.85; roughness: 0.15"></a-box>
+      <a-box position="-0.42 -0.02 0" width="0.04" height="0.03" depth="0.26" color="#2a2a2a" material="metalness: 0.85; roughness: 0.15"></a-box>
+      <!-- Espejos retrovisores -->
+      <a-box position="0.15 0.16 0.15" width="0.04" height="0.02" depth="0.04" color="#991a1a" material="metalness: 0.8"></a-box>
+      <a-box position="0.15 0.16 -0.15" width="0.04" height="0.02" depth="0.04" color="#991a1a" material="metalness: 0.8"></a-box>
+      <!-- Detalles cromados -->
+      <a-box position="0.365 0.01 0" width="0.01" height="0.05" depth="0.2" color="#dddddd" material="metalness: 0.95; roughness: 0.05"></a-box>
+    </a-entity>
+
+    <!-- Cámara y luces -->
+    <a-entity id="rig" position="0 0 3" wasd-controls="acceleration: 15" look-controls>
+      <a-entity camera position="0 1.6 0"></a-entity>
+    </a-entity>
+
+    <a-entity light="type: ambient; intensity: 0.85; color: #ffffff"></a-entity>
+    <a-entity light="type: directional; intensity: 0.7; castShadow: true" position="4 6 4" rotation="-45 45 0"></a-entity>
+
+    <!-- Mesa debajo de la cama de aire -->
+    <a-entity id="mesaSoporte" position="0 0 -3">
+      <!-- Superficie superior -->
+      <a-box position="0 1.05 0" width="6.4" height="0.15" depth="1.4" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+      <!-- Bordes decorativos -->
+      <a-box position="0 1.135 0.7" width="6.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+      <a-box position="0 1.135 -0.7" width="6.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+      <a-box position="-3.15 1.135 0" width="0.1" height="0.06" depth="1.4" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+      <a-box position="3.15 1.135 0" width="0.1" height="0.06" depth="1.4" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+      <!-- Patas metálicas mejoradas -->
+      <a-cylinder position="-3 0.5 0.6" radius="0.055" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+      <a-cylinder position="3 0.5 0.6" radius="0.055" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+      <a-cylinder position="-3 0.5 -0.6" radius="0.055" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+      <a-cylinder position="3 0.5 -0.6" radius="0.055" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+      <!-- Soportes horizontales -->
+      <a-box position="0 0.18 0.6" width="6" height="0.04" depth="0.12" color="#0f0f0f" material="metalness: 0.88; roughness: 0.2"></a-box>
+      <a-box position="0 0.18 -0.6" width="6" height="0.04" depth="0.12" color="#0f0f0f" material="metalness: 0.88; roughness: 0.2"></a-box>
+      <a-box position="-3 0.18 0" width="0.12" height="0.04" depth="1.2" color="#0f0f0f" material="metalness: 0.88; roughness: 0.2"></a-box>
+      <a-box position="3 0.18 0" width="0.12" height="0.04" depth="1.2" color="#0f0f0f" material="metalness: 0.88; roughness: 0.2"></a-box>
+      <!-- Bases antideslizantes -->
+      <a-box position="-3 0.04 0.6" width="0.22" height="0.08" depth="0.22" color="#0f0f0f" material="metalness: 0.75; roughness: 0.3"></a-box>
+      <a-box position="3 0.04 0.6" width="0.22" height="0.08" depth="0.22" color="#0f0f0f" material="metalness: 0.75; roughness: 0.3"></a-box>
+      <a-box position="-3 0.04 -0.6" width="0.22" height="0.08" depth="0.22" color="#0f0f0f" material="metalness: 0.75; roughness: 0.3"></a-box>
+      <a-box position="3 0.04 -0.6" width="0.22" height="0.08" depth="0.22" color="#0f0f0f" material="metalness: 0.75; roughness: 0.3"></a-box>
+      <!-- Estante inferior -->
+      <a-box position="0 0.42 0" width="6" height="0.08" depth="1.2" color="#8B6B47" material="metalness: 0.3; roughness: 0.65"></a-box>
+    </a-entity>
+
+    <!-- SILLAS frente a la mesa -->
+    <a-entity id="sillas-frente">
+      <!-- Silla 1 -->
+      <a-entity position="-2 0 -4.2">
+        <!-- Asiento acolchado -->
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <!-- Respaldo ergonómico -->
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <!-- Soporte lumbar -->
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <!-- Patas metálicas cromadas -->
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <!-- Tapas de patas -->
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+      
+      <!-- Silla 2 -->
+      <a-entity position="0 0 -4.2">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+      
+      <!-- Silla 3 -->
+      <a-entity position="2 0 -4.2">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- SILLAS detrás de la mesa -->
+    <a-entity id="sillas-atras">
+      <!-- Silla 1 -->
+      <a-entity position="-2 0 -1.8" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+      
+      <!-- Silla 2 -->
+      <a-entity position="0 0 -1.8" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+      
+      <!-- Silla 3 -->
+      <a-entity position="2 0 -1.8" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.62 -0.21" width="0.46" height="0.6" depth="0.05" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.5 -0.19" width="0.4" height="0.12" depth="0.06" color="#7B6857" material="roughness: 0.7"></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 -0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="-0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+        <a-cylinder position="0.18 0.01 0.18" radius="0.035" height="0.02" color="#111"></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- MESAS ADICIONALES CON SILLAS Y LIBROS - Distribuidas por el laboratorio -->
+
+    <!-- FILA 1: 3 Mesas en la parte trasera del laboratorio -->
+    <a-entity id="mesas-fila-1">
+      <!-- Mesa 1 (izquierda) -->
+      <a-entity position="-6 0 8">
+        <!-- Mesa -->
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <!-- Bordes decorativos -->
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <!-- Patas -->
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.8 1.16 0" width="0.15" height="0.25" depth="0.2" color="#1a4d99" shadow></a-box>
+        <a-box position="-0.5 1.16 0.1" width="0.12" height="0.22" depth="0.18" color="#991a1a" shadow></a-box>
+        <a-box position="-0.2 1.16 -0.1" width="0.14" height="0.24" depth="0.19" color="#339933" shadow></a-box>
+        <a-box position="0.3 1.16 0.05" width="0.13" height="0.23" depth="0.17" color="#996633" shadow></a-box>
+        <a-box position="0.7 1.16 -0.05" width="0.16" height="0.26" depth="0.21" color="#663399" shadow></a-box>
+        
+        <!-- Cuaderno y lápiz -->
+        <a-box position="0 1.16 0.3" width="0.25" height="0.03" depth="0.18" color="#f0f0f0" shadow></a-box>
+        <a-box position="0.1 1.16 0.35" width="0.18" height="0.02" depth="0.02" color="#cc9966" rotation="0 30 0" shadow></a-box>
+      </a-entity>
+
+      <!-- Mesa 2 (centro) -->
+      <a-entity position="0 0 8">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.7 1.16 0.2" width="0.14" height="0.23" depth="0.18" color="#cc3333" shadow></a-box>
+        <a-box position="-0.3 1.16 -0.1" width="0.16" height="0.26" depth="0.21" color="#3366cc" shadow></a-box>
+        <a-box position="0.2 1.16 0.15" width="0.13" height="0.22" depth="0.17" color="#33cc33" shadow></a-box>
+        <a-box position="0.6 1.16 -0.2" width="0.15" height="0.25" depth="0.2" color="#cc9933" shadow></a-box>
+        
+        <!-- Calculadora -->
+        <a-box position="-0.1 1.16 -0.3" width="0.18" height="0.05" depth="0.12" color="#333333" shadow></a-box>
+        <a-box position="-0.1 1.19 -0.3" width="0.16" height="0.02" depth="0.1" color="#666666" material="emissive: #88ff88; emissiveIntensity: 0.2"></a-box>
+      </a-entity>
+
+      <!-- Mesa 3 (derecha) -->
+      <a-entity position="6 0 8">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.8 1.16 -0.15" width="0.15" height="0.25" depth="0.2" color="#993399" shadow></a-box>
+        <a-box position="-0.4 1.16 0.1" width="0.12" height="0.22" depth="0.18" color="#339999" shadow></a-box>
+        <a-box position="0.1 1.16 -0.1" width="0.14" height="0.24" depth="0.19" color="#996633" shadow></a-box>
+        <a-box position="0.5 1.16 0.2" width="0.13" height="0.23" depth="0.17" color="#333399" shadow></a-box>
+        
+        <!-- Regla y compás -->
+        <a-box position="0.8 1.16 0" width="0.2" height="0.02" depth="0.03" color="#ffff99" shadow></a-box>
+        <a-cylinder position="0.7 1.16 -0.25" radius="0.02" height="0.15" color="#cccccc" rotation="90 0 0" shadow></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- SILLAS PARA FILA 1 -->
+    <a-entity id="sillas-fila-1">
+      <!-- Sillas Mesa 1 -->
+      <a-entity position="-6 0 9.2" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+
+      <!-- Sillas Mesa 2 -->
+      <a-entity position="0 0 9.2" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+
+      <!-- Sillas Mesa 3 -->
+      <a-entity position="6 0 9.2" rotation="0 180 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- FILA 2: 2 Mesas en los laterales -->
+    <a-entity id="mesas-fila-2">
+      <!-- Mesa 4 (lateral izquierdo) -->
+      <a-entity position="-8 0 0" rotation="0 90 0">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.6 1.16 0.2" width="0.14" height="0.23" depth="0.18" color="#cc6633" shadow></a-box>
+        <a-box position="0 1.16 -0.1" width="0.16" height="0.26" depth="0.21" color="#336699" shadow></a-box>
+        <a-box position="0.6 1.16 0.15" width="0.13" height="0.22" depth="0.17" color="#66cc66" shadow></a-box>
+        
+        <!-- Portaminas y borrador -->
+        <a-box position="-0.3 1.16 -0.3" width="0.08" height="0.15" depth="0.08" color="#666666" shadow></a-box>
+        <a-box position="0.3 1.16 -0.3" width="0.06" height="0.04" depth="0.06" color="#ff9999" shadow></a-box>
+      </a-entity>
+
+      <!-- Mesa 5 (lateral derecho) -->
+      <a-entity position="8 0 0" rotation="0 -90 0">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.7 1.16 -0.15" width="0.15" height="0.25" depth="0.2" color="#9966cc" shadow></a-box>
+        <a-box position="-0.2 1.16 0.1" width="0.12" height="0.22" depth="0.18" color="#66cccc" shadow></a-box>
+        <a-box position="0.4 1.16 -0.1" width="0.14" height="0.24" depth="0.19" color="#cc9966" shadow></a-box>
+        
+        <!-- Cuaderno abierto -->
+        <a-box position="0.7 1.16 0.2" width="0.22" height="0.03" depth="0.16" color="#f8f8f8" shadow></a-box>
+        <a-box position="0.75 1.17 0.2" width="0.01" height="0.02" depth="0.14" color="#cccccc" shadow></a-box>
+      </a-entity>
+    </a-entity>
+
+    <!-- SILLAS PARA FILA 2 -->
+    <a-entity id="sillas-fila-2">
+      <!-- Sillas Mesa 4 -->
+      <a-entity position="-9.2 0 0" rotation="0 90 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+
+      <!-- Sillas Mesa 5 -->
+      <a-entity position="9.2 0 0" rotation="0 -90 0">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- FILA 3: 2 Mesas delante de la pizarra -->
+    <a-entity id="mesas-fila-3">
+      <!-- Mesa 6 (delante pizarra izquierda) -->
+      <a-entity position="-4 0 -6">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.8 1.16 0" width="0.15" height="0.25" depth="0.2" color="#3399cc" shadow></a-box>
+        <a-box position="-0.4 1.16 0.2" width="0.12" height="0.22" depth="0.18" color="#cc3399" shadow></a-box>
+        <a-box position="0.1 1.16 -0.1" width="0.14" height="0.24" depth="0.19" color="#33cc99" shadow></a-box>
+        <a-box position="0.5 1.16 0.1" width="0.13" height="0.23" depth="0.17" color="#cc9933" shadow></a-box>
+        
+        <!-- Carpeta y apuntes -->
+        <a-box position="0.7 1.16 -0.25" width="0.2" height="0.04" depth="0.15" color="#993333" shadow></a-box>
+      </a-entity>
+
+      <!-- Mesa 7 (delante pizarra derecha) -->
+      <a-entity position="4 0 -6">
+        <a-box position="0 1.05 0" width="2.4" height="0.15" depth="1.2" src="#madera" material="metalness: 0.3; roughness: 0.65; color: #9B7653" shadow></a-box>
+        <a-box position="0 1.135 0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-box position="0 1.135 -0.6" width="2.4" height="0.06" depth="0.1" color="#6B5340" material="metalness: 0.4; roughness: 0.5"></a-box>
+        <a-cylinder position="-1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="-1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        <a-cylinder position="1.1 0.5 -0.5" radius="0.04" height="1" color="#1a1a1a" material="metalness: 0.92; roughness: 0.15" shadow></a-cylinder>
+        
+        <!-- Libros sobre la mesa -->
+        <a-box position="-0.7 1.16 -0.15" width="0.15" height="0.25" depth="0.2" color="#6699cc" shadow></a-box>
+        <a-box position="-0.2 1.16 0.1" width="0.12" height="0.22" depth="0.18" color="#cc6699" shadow></a-box>
+        <a-box position="0.3 1.16 -0.1" width="0.14" height="0.24" depth="0.19" color="#66cc99" shadow></a-box>
+        <a-box position="0.7 1.16 0.2" width="0.13" height="0.23" depth="0.17" color="#cc9966" shadow></a-box>
+        
+        <!-- Mochila pequeña -->
+        <a-box position="-0.9 1.16 -0.3" width="0.25" height="0.18" depth="0.12" color="#663300" shadow></a-box>
+      </a-entity>
+    </a-entity>
+
+    <!-- SILLAS PARA FILA 3 -->
+    <a-entity id="sillas-fila-3">
+      <!-- Sillas Mesa 6 -->
+      <a-entity position="-4 0 -4.5">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+
+      <!-- Sillas Mesa 7 -->
+      <a-entity position="4 0 -4.5">
+        <a-box position="0 0.3 0" width="0.5" height="0.08" depth="0.5" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-box position="0 0.32 0" width="0.48" height="0.04" depth="0.48" color="#6B5847" material="roughness: 0.7"></a-box>
+        <a-box position="0 0.62 -0.22" width="0.5" height="0.64" depth="0.08" color="#5B4A3A" material="roughness: 0.8" shadow></a-box>
+        <a-cylinder position="-0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 -0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="-0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+        <a-cylinder position="0.18 0.15 0.18" radius="0.025" height="0.3" color="#222" material="metalness: 0.9; roughness: 0.1" shadow></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- PIZARRA CON GRÁFICO INTEGRADO -->
+    <a-entity id="pizarraGrafico" position="0 2.2 -8" rotation="0 0 0">
+      <!-- Marco de pizarra -->
+      <a-box position="0 0 0" width="5.4" height="3.2" depth="0.15" 
+            color="#8B4513" material="roughness: 0.8; metalness: 0.2" shadow></a-box>
+      
+      <!-- Fondo negro para el gráfico -->
+      <a-plane position="0 0 0.076" width="4.8" height="2.8" 
+              color="#000000" material="roughness: 0.9" 
+              shadow="cast: true; receive: true"></a-plane>
+      
+      <!-- GRÁFICO INTEGRADO - PERFECTAMENTE CENTRADO -->
+      <a-plane position="0 0 0.08" width="4.6" height="2.6" 
+              material="shader: flat; src: #graficoCanvas" 
+              shadow="cast: true; receive: true"></a-plane>
+      
+      <!-- Título pequeño arriba del gráfico -->
+      <a-text value="ANALISIS DE COLISION" position="0 1.5 0.08" 
+            align="center" color="#FFFFFF" width="5" scale="0.8 0.8 0.8"
+            font="https://cdn.aframe.io/fonts/Exo2SemiBold.fnt"></a-text>
+      
+      <!-- Soporte de pizarra -->
+      <a-cylinder position="-2.4 -1.6 0" radius="0.05" height="3.2" 
+                  color="#696969" material="metalness: 0.4; roughness: 0.6" shadow></a-cylinder>
+      <a-cylinder position="2.4 -1.6 0" radius="0.05" height="3.2" 
+                  color="#696969" material="metalness: 0.4; roughness: 0.6" shadow></a-cylinder>
+      
+      <!-- Base del soporte -->
+      <a-box position="0 -2.9 0" width="5.0" height="0.1" depth="0.8" 
+            color="#2F4F4F" material="metalness: 0.3; roughness: 0.7" shadow></a-box>
+      
+      <!-- Ruedas de la base -->
+      <a-cylinder position="-2.2 -2.95 0.3" radius="0.08" height="0.1" 
+                  color="#2F4F4F" rotation="90 0 0" shadow></a-cylinder>
+      <a-cylinder position="2.2 -2.95 0.3" radius="0.08" height="0.1" 
+                  color="#2F4F4F" rotation="90 0 0" shadow></a-cylinder>
+      <a-cylinder position="-2.2 -2.95 -0.3" radius="0.08" height="0.1" 
+                  color="#2F4F4F" rotation="90 0 0" shadow></a-cylinder>
+      <a-cylinder position="2.2 -2.95 -0.3" radius="0.08" height="0.1" 
+                  color="#2F4F4F" rotation="90 0 0" shadow></a-cylinder>
+    </a-entity>
+
+    <!-- GABINETES PROFESIONALES ABIERTOS SIN PUERTAS - Pared Izquierda -->
+    <a-entity id="gabinetes-profesionales-izq" position="-11.85 0 0">
+      <!-- Gabinete 1 -->
+      <a-entity position="0 0 -4">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.7" width="0.02" height="0.32" depth="0.16" color="#003d99" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.5" width="0.02" height="0.28" depth="0.14" color="#990033" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.3" width="0.02" height="0.3" depth="0.15" color="#006633" shadow></a-box>
+        <a-box position="-0.1 3.2 0.2" width="0.02" height="0.34" depth="0.17" color="#660099" shadow></a-box>
+        <a-box position="-0.1 3.2 0.6" width="0.02" height="0.31" depth="0.16" color="#009999" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.6" radius="0.06" height="0.26" color="#88ccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0" radius="0.065" height="0.28" color="#88ff88" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0.6" radius="0.058" height="0.27" color="#ff88ff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.5" width="0.18" height="0.15" depth="0.18" color="#444" shadow></a-box>
+        <a-box position="-0.1 1.95 0.1" width="0.17" height="0.16" depth="0.17" color="#333" shadow></a-box>
+        <a-box position="-0.1 1.95 0.4" width="0.15" height="0.13" depth="0.15" color="#666" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 2 -->
+      <a-entity position="0 0 -2">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.6" width="0.02" height="0.3" depth="0.15" color="#cc0033" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.2" width="0.02" height="0.32" depth="0.16" color="#33cc00" shadow></a-box>
+        <a-box position="-0.1 3.2 0.3" width="0.02" height="0.31" depth="0.16" color="#6600cc" shadow></a-box>
+        
+        <a-cone position="-0.1 2.55 -0.5" radius-bottom="0.075" radius-top="0.025" height="0.24" color="#aaffaa" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        <a-cone position="-0.1 2.55 0.3" radius-bottom="0.08" radius-top="0.035" height="0.25" color="#aaaaff" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        
+        <a-box position="-0.1 1.95 -0.4" width="0.17" height="0.13" depth="0.17" color="#555" shadow></a-box>
+        <a-box position="-0.1 1.95 0.4" width="0.18" height="0.15" depth="0.18" color="#444" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 3 -->
+      <a-entity position="0 0 0">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.65" width="0.02" height="0.31" depth="0.16" color="#990099" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.15" width="0.02" height="0.33" depth="0.17" color="#999900" shadow></a-box>
+        <a-box position="-0.1 3.2 0.45" width="0.02" height="0.32" depth="0.16" color="#990000" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.55" radius="0.058" height="0.25" color="#ffccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0.15" radius="0.056" height="0.24" color="#ffffcc" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.45" width="0.16" height="0.14" depth="0.16" color="#666" shadow></a-box>
+        <a-box position="-0.1 1.95 0.25" width="0.15" height="0.13" depth="0.15" color="#777" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 4 -->
+      <a-entity position="0 0 2">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.7" width="0.02" height="0.32" depth="0.16" color="#cc3300" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.2" width="0.02" height="0.31" depth="0.16" color="#33cc00" shadow></a-box>
+        <a-box position="-0.1 3.2 0.4" width="0.02" height="0.33" depth="0.17" color="#cccc00" shadow></a-box>
+        
+        <a-cone position="-0.1 2.55 -0.6" radius-bottom="0.076" radius-top="0.026" height="0.25" color="#aaffaa" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        <a-cone position="-0.1 2.55 0.2" radius-bottom="0.078" radius-top="0.028" height="0.26" color="#aaaaff" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        
+        <a-box position="-0.1 1.95 -0.5" width="0.17" height="0.13" depth="0.17" color="#555" shadow></a-box>
+        <a-box position="-0.1 1.95 0.3" width="0.18" height="0.15" depth="0.18" color="#444" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 5 -->
+      <a-entity position="0 0 4">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.65" width="0.02" height="0.31" depth="0.16" color="#6633cc" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.25" width="0.02" height="0.32" depth="0.16" color="#33cc66" shadow></a-box>
+        <a-box position="-0.1 3.2 0.35" width="0.02" height="0.33" depth="0.17" color="#66cc33" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.5" radius="0.059" height="0.24" color="#ccffcc" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0.3" radius="0.057" height="0.23" color="#ccccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.4" width="0.16" height="0.14" depth="0.16" color="#444" shadow></a-box>
+        <a-box position="-0.1 1.95 0.4" width="0.15" height="0.13" depth="0.15" color="#666" shadow></a-box>
+      </a-entity>
+    </a-entity>
+
+    <!-- GABINETES PROFESIONALES ABIERTOS SIN PUERTAS - Pared Derecha -->
+    <a-entity id="gabinetes-profesionales-der" position="11.85 0 0" rotation="0 180 0">
+      <!-- Gabinete 1 -->
+      <a-entity position="0 0 -4">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.7" width="0.02" height="0.32" depth="0.16" color="#003d99" shadow></a-box>
+        <a-box position="-0.1 3.2 -0.3" width="0.02" height="0.3" depth="0.15" color="#006633" shadow></a-box>
+        <a-box position="-0.1 3.2 0.2" width="0.02" height="0.34" depth="0.17" color="#660099" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.6" radius="0.06" height="0.26" color="#88ccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0" radius="0.065" height="0.28" color="#88ff88" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.5" width="0.18" height="0.15" depth="0.18" color="#444" shadow></a-box>
+        <a-box position="-0.1 1.95 0.1" width="0.17" height="0.16" depth="0.17" color="#333" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 2 -->
+      <a-entity position="0 0 -2">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.6" width="0.02" height="0.3" depth="0.15" color="#cc0033" shadow></a-box>
+        <a-box position="-0.1 3.2 0.3" width="0.02" height="0.31" depth="0.16" color="#6600cc" shadow></a-box>
+        
+        <a-cone position="-0.1 2.55 -0.5" radius-bottom="0.075" radius-top="0.025" height="0.24" color="#aaffaa" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        <a-cone position="-0.1 2.55 0.3" radius-bottom="0.08" radius-top="0.035" height="0.25" color="#aaaaff" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        
+        <a-box position="-0.1 1.95 -0.4" width="0.17" height="0.13" depth="0.17" color="#555" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 3 -->
+      <a-entity position="0 0 0">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.65" width="0.02" height="0.31" depth="0.16" color="#990099" shadow></a-box>
+        <a-box position="-0.1 3.2 0.45" width="0.02" height="0.32" depth="0.16" color="#990000" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.55" radius="0.058" height="0.25" color="#ffccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0.5" radius="0.06" height="0.25" color="#ffcccc" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.45" width="0.16" height="0.14" depth="0.16" color="#666" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 4 -->
+      <a-entity position="0 0 2">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.7" width="0.02" height="0.32" depth="0.16" color="#cc3300" shadow></a-box>
+        <a-box position="-0.1 3.2 0.4" width="0.02" height="0.33" depth="0.17" color="#cccc00" shadow></a-box>
+        
+        <a-cone position="-0.1 2.55 -0.6" radius-bottom="0.076" radius-top="0.026" height="0.25" color="#aaffaa" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        <a-cone position="-0.1 2.55 0.2" radius-bottom="0.078" radius-top="0.028" height="0.26" color="#aaaaff" material="opacity: 0.8; transparent: true" shadow></a-cone>
+        
+        <a-box position="-0.1 1.95 -0.5" width="0.17" height="0.13" depth="0.17" color="#555" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete 5 -->
+      <a-entity position="0 0 4">
+        <a-box position="0 1.8 0" width="0.5" height="3.6" depth="1.8" color="#1a1a1a" material="metalness: 0.6; roughness: 0.4" shadow></a-box>
+        <a-box position="0.25 1.8 0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0.25 1.8 -0.9" width="0.02" height="3.6" depth="0.04" color="#333333" material="metalness: 0.7"></a-box>
+        <a-box position="0 3 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 2.4 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.8 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 1.2 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        <a-box position="0 0.6 0" width="0.45" height="0.03" depth="1.75" color="#2a2a2a" shadow></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-0.1 3.2 -0.65" width="0.02" height="0.31" depth="0.16" color="#6633cc" shadow></a-box>
+        <a-box position="-0.1 3.2 0.35" width="0.02" height="0.33" depth="0.17" color="#66cc33" shadow></a-box>
+        
+        <a-cylinder position="-0.1 2.55 -0.5" radius="0.059" height="0.24" color="#ccffcc" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="-0.1 2.55 0.3" radius="0.057" height="0.23" color="#ccccff" material="opacity: 0.8; transparent: true" shadow></a-cylinder>
+        
+        <a-box position="-0.1 1.95 -0.4" width="0.16" height="0.14" depth="0.16" color="#444" shadow></a-box>
+      </a-entity>
+    </a-entity>
+
+    <!-- GABINETES PROFESIONALES CON PUERTAS DE VIDRIO - Pared del Fondo -->
+    <a-entity id="gabinetes-profesionales-fondo" position="0 0 -11.4" rotation="0 0 0">
+      <!-- Gabinete Grande 1 -->
+      <a-entity position="-6 0 0">
+        <a-box position="0 1.2 0" width="3.5" height="2.4" depth="0.5" color="#0d0d0d" material="metalness: 0.5; roughness: 0.5" shadow></a-box>
+        <a-box position="1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-box position="-1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-plane position="0 1.2 0.28" width="2.35" height="3.46" rotation="0 0 90" color="#e0f0ff" material="opacity: 0.3; transparent: true; metalness: 0.9; roughness: 0.05" shadow></a-plane>
+        <a-cylinder position="0.3 1.3 0.3" radius="0.015" height="0.15" color="#cccccc" material="metalness: 0.9"></a-cylinder>
+        
+        <a-box position="0 2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 1.4 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.8 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        
+        <!-- Contenido visible -->
+        <a-box position="-1.5 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#003399" shadow></a-box>
+        <a-box position="-1.1 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#339900" shadow></a-box>
+        <a-box position="0.3 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#660099" shadow></a-box>
+        <a-box position="1.1 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#009999" shadow></a-box>
+        
+        <!-- Osciloscopio -->
+        <a-box position="-1.2 1.55 -0.15" width="0.4" height="0.3" depth="0.2" color="#222" shadow></a-box>
+        <a-box position="-1.2 1.6 -0.05" width="0.32" height="0.22" depth="0.02" color="#003300" material="emissive: #00ff00; emissiveIntensity: 0.3"></a-box>
+        
+        <!-- Generador de funciones -->
+        <a-box position="0.6 1.55 -0.15" width="0.4" height="0.3" depth="0.2" color="#444" shadow></a-box>
+      </a-entity>
+      
+      <!-- Gabinete Grande 2 -->
+      <a-entity position="0 0 0">
+        <a-box position="0 1.2 0" width="3.5" height="2.4" depth="0.5" color="#0d0d0d" material="metalness: 0.5; roughness: 0.5" shadow></a-box>
+        <a-box position="1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-box position="-1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-plane position="0 1.2 0.28" width="2.35" height="3.46" rotation="0 0 90" color="#e0f0ff" material="opacity: 0.3; transparent: true; metalness: 0.9; roughness: 0.05" shadow></a-plane>
+        <a-cylinder position="0.3 1.3 0.3" radius="0.015" height="0.15" color="#cccccc" material="metalness: 0.9"></a-cylinder>
+        
+        <a-box position="0 2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 1.4 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.8 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-1.4 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#cc0033" shadow></a-box>
+        <a-box position="-1 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#33cc00" shadow></a-box>
+        <a-box position="0.4 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#cc00cc" shadow></a-box>
+        <a-box position="1.2 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#00cccc" shadow></a-box>
+        
+        <a-cylinder position="-1.2 1.55 -0.15" radius="0.07" height="0.22" color="#88ccff" material="opacity: 0.7; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="0 1.55 -0.15" radius="0.07" height="0.22" color="#88ff88" material="opacity: 0.7; transparent: true" shadow></a-cylinder>
+        <a-cylinder position="1.2 1.55 -0.15" radius="0.07" height="0.22" color="#ff88ff" material="opacity: 0.7; transparent: true" shadow></a-cylinder>
+      </a-entity>
+      
+      <!-- Gabinete Grande 3 -->
+      <a-entity position="6 0 0">
+        <a-box position="0 1.2 0" width="3.5" height="2.4" depth="0.5" color="#0d0d0d" material="metalness: 0.5; roughness: 0.5" shadow></a-box>
+        <a-box position="1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-box position="-1.75 1.2 0.26" width="0.03" height="2.4" depth="0.03" color="#2a2a2a" material="metalness: 0.8"></a-box>
+        <a-plane position="0 1.2 0.28" width="2.35" height="3.46" rotation="0 0 90" color="#e0f0ff" material="opacity: 0.3; transparent: true; metalness: 0.9; roughness: 0.05" shadow></a-plane>
+        <a-cylinder position="0.3 1.3 0.3" radius="0.015" height="0.15" color="#cccccc" material="metalness: 0.9"></a-cylinder>
+        
+        <a-box position="0 2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 1.4 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.8 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        <a-box position="0 0.2 0" width="3.45" height="0.02" depth="0.45" color="#1a1a1a"></a-box>
+        
+        <!-- Contenido -->
+        <a-box position="-1.5 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#993366" shadow></a-box>
+        <a-box position="-1.1 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#663399" shadow></a-box>
+        <a-box position="0.5 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#993300" shadow></a-box>
+        <a-box position="1.3 2.15 -0.15" width="0.15" height="0.25" depth="0.02" color="#330099" shadow></a-box>
+        
+        <a-cone position="-1.3 1.55 -0.15" radius-bottom="0.08" radius-top="0.04" height="0.22" color="#aaffaa" material="opacity: 0.7; transparent: true" shadow></a-cone>
+        <a-cone position="0.3 1.55 -0.15" radius-bottom="0.08" radius-top="0.04" height="0.22" color="#aaaaff" material="opacity: 0.7; transparent: true" shadow></a-cone>
+        <a-cylinder position="1.1 1.55 -0.15" radius="0.06" height="0.2" color="#ffffaa" material="opacity: 0.7; transparent: true" shadow></a-cylinder>
+      </a-entity>
+    </a-entity>
+
+    <!-- Techo del laboratorio -->
+    <a-entity id="techo" position="0 7 0">
+      
+      <!-- Estructura de vigas del techo -->
+      <!-- Vigas principales longitudinales -->
+      <a-box position="0 -0.1 0" width="25" height="0.15" depth="0.3" 
+            color="#34495e" material="roughness: 0.7; metalness: 0.3"></a-box>
+      
+      <!-- Vigas transversales -->
+      <a-box position="-8 -0.1 0" width="0.3" height="0.15" depth="25" 
+            color="#34495e" material="roughness: 0.7; metalness: 0.3"></a-box>
+      <a-box position="0 -0.1 0" width="0.3" height="0.15" depth="25" 
+            color="#34495e" material="roughness: 0.7; metalness: 0.3"></a-box>
+      <a-box position="8 -0.1 0" width="0.3" height="0.15" depth="25" 
+            color="#34495e" material="roughness: 0.7; metalness: 0.3"></a-box>
+      
+      <!-- Sistema de iluminación integrado -->
+      <!-- Luminaria principal central -->
+      <a-entity position="0 -0.15 -3">
+        <a-box position="0 0 0" width="2.5" height="0.2" depth="1.2" 
+              color="#2c3e50" material="roughness: 0.6; metalness: 0.2"></a-box>
+        <a-box position="0 -0.05 0" width="2.3" height="0.05" depth="1.0" 
+              color="#ffffff" material="emissive: #ffffff; emissiveIntensity: 0.4"></a-box>
+      </a-entity>
+
+      <!-- Luminarias laterales -->
+      <a-entity position="-8 -0.15 0">
+        <a-box position="0 0 0" width="1.8" height="0.15" depth="0.9" 
+              color="#2c3e50" material="roughness: 0.6; metalness: 0.2"></a-box>
+        <a-box position="0 -0.05 0" width="1.6" height="0.04" depth="0.8" 
+              color="#ffffff" material="emissive: #ffffff; emissiveIntensity: 0.3"></a-box>
+      </a-entity>
+
+      <a-entity position="8 -0.15 0">
+        <a-box position="0 0 0" width="1.8" height="0.15" depth="0.9" 
+              color="#2c3e50" material="roughness: 0.6; metalness: 0.2"></a-box>
+        <a-box position="0 -0.05 0" width="1.6" height="0.04" depth="0.8" 
+              color="#ffffff" material="emissive: #ffffff; emissiveIntensity: 0.3"></a-box>
+      </a-entity>
+
+      <!-- Extractores de aire -->
+      <a-entity position="-5 -0.1 5">
+        <a-cylinder position="0 0 0" radius="0.4" height="0.15" 
+                    color="#7f8c8d" material="roughness: 0.7; metalness: 0.3"></a-cylinder>
+        <a-box position="0 0.05 0" width="0.7" height="0.02" depth="0.1" 
+              color="#95a5a6" rotation="0 45 0"></a-box>
+        <a-box position="0 0.05 0" width="0.7" height="0.02" depth="0.1" 
+              color="#95a5a6" rotation="0 135 0"></a-box>
+      </a-entity>
+
+      <a-entity position="5 -0.1 -5">
+        <a-cylinder position="0 0 0" radius="0.4" height="0.15" 
+                    color="#7f8c8d" material="roughness: 0.7; metalness: 0.3"></a-cylinder>
+        <a-box position="0 0.05 0" width="0.7" height="0.02" depth="0.1" 
+              color="#95a5a6" rotation="0 45 0"></a-box>
+        <a-box position="0 0.05 0" width="0.7" height="0.02" depth="0.1" 
+              color="#95a5a6" rotation="0 135 0"></a-box>
+      </a-entity>
+
+      <!-- Sensores de seguridad -->
+      <a-entity position="-10 -0.1 10">
+        <a-cylinder position="0 0 0" radius="0.1" height="0.12" 
+                    color="#e74c3c" material="roughness: 0.5; metalness: 0.4"></a-cylinder>
+        <a-sphere position="0 0.05 0" radius="0.05" color="#c0392b" 
+                  material="emissive: #ff0000; emissiveIntensity: 0.2"></a-sphere>
+      </a-entity>
+
+      <a-entity position="10 -0.1 -10">
+        <a-cylinder position="0 0 0" radius="0.1" height="0.12" 
+                    color="#27ae60" material="roughness: 0.5; metalness: 0.4"></a-cylinder>
+        <a-sphere position="0 0.05 0" radius="0.05" color="#229954" 
+                  material="emissive: #00ff00; emissiveIntensity: 0.2"></a-sphere>
+      </a-entity>
+
+    </a-entity>
+  </a-scene>
+
+  <script src="simulacion.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+</body>
+</html>

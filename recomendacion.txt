@@ -1,0 +1,11 @@
+ANTES DE HACER TODO EJECUTAR EL SERVIDOR DE PYTHON (server.py) MEDIANTE EL SIGUIENTE SCRIPT EN LA TERMINAL:
+
+    PS C:\Users\HP VICTUS I5 13TH\Desktop\TRABAJOS\Colision Elastica> python server.py
+
+ACTIVAR EL ENTORNO VIRTUAL
+
+    PS C:\Users\DESKTOP\Desktop\TRABAJOS\Colision Elastica> .\venv\Scripts\Activate.ps1   
+
+DESACTIVAR EL ENTORNO VIRTUAL
+
+    (venv) PS C:\Users\DESKTOP\Desktop\TRABAJOS\Colision Elastica> deactivate
